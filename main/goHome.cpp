@@ -8,6 +8,20 @@
 #define TRADIO 0.0075 // radio del tambor
 #define PRADIO 0.05 // radio de la plataforma
 
+/* Programa para tensar hilos */
+
+// tense tendons:
+//  true: it's stopped and tensed
+bool tenseThread(CiA402Device motor){
+    motor.Setup_Torque_Mode();
+    motor.SetTorque(0.01); //0.07
+    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    while(motor.GetVelocity() > 0.2) //0.2
+        printf("Tensing thread... vel: %f\n", motor.GetVelocity());
+    motor.Setup_Velocity_Mode(0);
+    return true;
+}
+
 //-------------------------------------------------------------------------
 /* Calibrado de los hilos y control en posicion 0 de pitch y roll
  * haciendo uso de controladores en velocidad externos de cada uno de los drivers */
@@ -34,36 +48,37 @@ int main ()
     SamplingTime Ts;
     Ts.SetSamplingTime(dts); // 0.020
 
+    bool tensed = false;
+
     // configuring IMU
     IMU3DMGX510 imu("/dev/ttyUSB0",freq);
     double pitch=1,roll=1, yaw;
-
-    cout<<"Calibrating IMU..."<<endl;
-
-    for (double t=0;t<10;t+=dts)
-    {
-       imu.GetPitchRollYaw(pitch,roll,yaw);
-    }
-
-    cout<<"Calibrated!"<<endl;
 
     //m1 setup
     SocketCanPort pm1("can1");
     CiA402SetupData sd1(2048,24,0.001, 0.144, 10);
     CiA402Device m1 (1, &pm1, &sd1);
-    m1.Setup_Velocity_Mode(10);
+    //m1.Setup_Velocity_Mode(0);
 
     //m2 setup
     SocketCanPort pm2("can1");
     CiA402SetupData sd2(2048,24,0.001, 0.144, 10);
     CiA402Device m2 (2, &pm2, &sd2);
-    m2.Setup_Velocity_Mode(10);
+    //m2.Setup_Velocity_Mode(0);
 
     //m3 setup
     SocketCanPort pm3("can1");
     CiA402SetupData sd3(2048,24,0.001, 0.144, 10);
     CiA402Device m3 (3, &pm3, &sd3);
-    m3.Setup_Velocity_Mode(10);
+    //m3.Setup_Velocity_Mode(0);
+
+
+    tensed &= tenseThread(m1);
+    tensed &= tenseThread(m2);
+    tensed &= tenseThread(m3);
+
+    if( tensed )
+        printf("tendons tensed successfully\n");
 
     // controller for motor
     PIDBlock cntrl1(0.015,36,0,dts);
@@ -77,10 +92,14 @@ int main ()
     FPDBlock fcPitchVelocity(2.5773, 3.2325, -0.8500, dts);
     FPDBlock fcRollVelocity(2.6299, 3.2395, -0.8600, dts);
 
-    while(pitch>0.01 && roll>0.01){
+    imu.GetPitchRollYaw(pitch,roll,yaw);
+    printf("pitch: %f roll: %f\n", pitch, roll);
+
+    while((pitch>0.005 || pitch<-0.005) || (roll>0.005 || roll<-0.005)){
 
         // ---- General Control process ----
         imu.GetPitchRollYaw(pitch,roll,yaw);
+        printf("pitch: %f roll: %f\n", pitch, roll);
 
         // cambio signo para igualar sentido de giro de los motores y del sensor
         pitch = -pitch;

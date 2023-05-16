@@ -7,7 +7,6 @@ class Sensor
 {
     private:
         IMU3DMGX510 * imu;
-        double freq;
         double pitch,roll, yaw;
     public:
         Sensor(double f);
@@ -16,11 +15,10 @@ class Sensor
 
 Sensor::Sensor(double f){
     imu = new IMU3DMGX510("/dev/ttyUSB0",f);
-    for (double t=0;t<10;t+=1/f)
-    {
-       imu->GetPitchRollYaw(pitch,roll,yaw);
-    }
-    cout<<"Calibrated"<<endl;
+    //printf("Calibrando IMU..\n");
+
+    //cout<<"Calibrated"<<endl;
+
 }
 
 std::vector<double> Sensor::read(){
@@ -30,7 +28,9 @@ std::vector<double> Sensor::read(){
 }
 
 int main(){
-    Sensor s(0.02);
+    Sensor s(50);
     std::vector<double> value = s.read();
+    printf("%f %f\n", value[0], value[1]);
 }
+
 

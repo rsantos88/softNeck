@@ -2,6 +2,14 @@
 #include <iostream>
 #include <stdio.h>
 
+#include <yarp/os/Bottle.h>
+#include <yarp/os/Network.h>
+#include <yarp/os/Port.h>
+
+using yarp::os::Bottle;
+using yarp::os::Network;
+using yarp::os::Port;
+
 
 class Sensor
 {
@@ -15,10 +23,6 @@ class Sensor
 
 Sensor::Sensor(double f){
     imu = new IMU3DMGX510("/dev/ttyUSB0",f);
-    //printf("Calibrando IMU..\n");
-
-    //cout<<"Calibrated"<<endl;
-
 }
 
 std::vector<double> Sensor::read(){
@@ -28,9 +32,26 @@ std::vector<double> Sensor::read(){
 }
 
 int main(){
+    Network yarp;
+    Port input, output;
+    Bottle inBottle, outBottle;
+    input.open("/receiver");
+    output.open("/sender");
     Sensor s(50);
-    std::vector<double> value = s.read();
-    printf("%f %f\n", value[0], value[1]);
+
+    while(1){
+        input.read(inBottle);
+        if(inBottle.toString()=="sendme")
+        {
+            std::vector<double> value = s.read();
+            printf("> %f %f\n", value[0], value[1]);
+            outBottle.addFloat64(value[0]);
+            outBottle.addFloat64(value[1]);
+            output.write(outBottle);
+            inBottle.clear();
+            outBottle.clear();
+        }
+    }
 }
 
 

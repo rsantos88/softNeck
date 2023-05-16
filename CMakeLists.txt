@@ -2,10 +2,16 @@ cmake_minimum_required(VERSION 2.8)
 
 project(softNeck)
 
+if(NOT YARP_FOUND)
+    find_package(YARP 3.5 REQUIRED COMPONENTS os dev)
+endif()
+
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/files/phi.m_exp.csv ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
+
+
+
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/lib/CiA402Device/)
 add_subdirectory(${PROJECT_SOURCE_DIR}/lib/fcontrol/)
@@ -34,6 +40,9 @@ foreach( sourcefile ${SRC_LIST} )
     add_executable( ${name} ${sourcefile} )
     message ("Including executable: " ${name})
     #link with libs
-    target_link_libraries( ${name} ${SUBDIR_LINK_NAMES} )
+    target_link_libraries( ${name} ${SUBDIR_LINK_NAMES}
+                                   YARP::YARP_os
+                                   YARP::YARP_init
+                                   YARP::YARP_dev)
 endforeach( sourcefile ${SRC_LIST} )
 

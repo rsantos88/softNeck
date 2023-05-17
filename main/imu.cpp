@@ -41,16 +41,21 @@ int main(){
 
     while(1){
         input.read(inBottle);
+        cout << inBottle.get(0).asString() << endl;
         if(inBottle.toString()=="sendme")
         {
             std::vector<double> value = s.read();
             printf("> %f %f\n", value[0], value[1]);
             outBottle.addFloat64(value[0]);
             outBottle.addFloat64(value[1]);
+            sleep(0.1);
             output.write(outBottle);
             inBottle.clear();
             outBottle.clear();
         }
+        if(inBottle.toString()=="exit")
+            break;
+
     }
 }
 

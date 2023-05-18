@@ -37,6 +37,7 @@ void pr2tendons(double pitch, double roll, std::vector<double> & vel)
 
 int main ()
 {
+    std::cout << "HELLOOOOOO1"<< std::endl;
 
     // inputs
     vector<double> targetPose{0, 0}; // HOME
@@ -46,7 +47,9 @@ int main ()
     double freq=50; //sensor use values: 50,100,500...
     double dts=1/freq;
     SamplingTime Ts;
+    std::cout << "HELLOOOOOO"<< std::endl;
     Ts.SetSamplingTime(dts); // 0.020
+    std::cout << "PETOOOOOOOO"<< std::endl;
 
     bool tensed = false;
 
@@ -55,22 +58,19 @@ int main ()
     double pitch=1,roll=1, yaw;
 
     //m1 setup
-    SocketCanPort pm1("can1");
+    SocketCanPort pm1("can0");
     CiA402SetupData sd1(2048,24,0.001, 0.144, 10);
     CiA402Device m1 (1, &pm1, &sd1);
-    //m1.Setup_Velocity_Mode(0);
 
     //m2 setup
-    SocketCanPort pm2("can1");
+    SocketCanPort pm2("can0");
     CiA402SetupData sd2(2048,24,0.001, 0.144, 10);
     CiA402Device m2 (2, &pm2, &sd2);
-    //m2.Setup_Velocity_Mode(0);
 
     //m3 setup
-    SocketCanPort pm3("can1");
+    SocketCanPort pm3("can0");
     CiA402SetupData sd3(2048,24,0.001, 0.144, 10);
     CiA402Device m3 (3, &pm3, &sd3);
-    //m3.Setup_Velocity_Mode(0);
 
 
     tensed &= tenseThread(m1);

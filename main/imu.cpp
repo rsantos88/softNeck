@@ -32,11 +32,13 @@ std::vector<double> Sensor::read(){
 }
 
 int main(){
+    std::cout << "ENTROOOOO"<< std::endl;
     Network yarp;
     Port input, output;
     Bottle inBottle, outBottle;
     input.open("/receiver");
     output.open("/sender");
+    std::cout << "PETOOOOOOOO"<< std::endl;
     Sensor s(50);
 
     while(1){

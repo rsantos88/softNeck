@@ -34,21 +34,21 @@ int main (int argc, char *argv[])
     std::chrono::system_clock::time_point start, current;
 
     //m1
-    SocketCanPort pm1("can1");
+    SocketCanPort pm1("can0");
     CiA402SetupData sd1(2048,24,0.001, 0.144, 10);
     CiA402Device m1 (1, &pm1, &sd1);
     //m1.Reset();
     m1.SetupPositionMode(10, 10);
 
     //m2
-    SocketCanPort pm2("can1");
+    SocketCanPort pm2("can0");
     CiA402SetupData sd2(2048,24,0.001, 0.144, 10);
     CiA402Device m2 (2, &pm2, &sd2);
     //m2.Reset();
     m2.SetupPositionMode(10, 10);
 
     //m3
-    SocketCanPort pm3("can1");
+    SocketCanPort pm3("can0");
     CiA402SetupData sd3(2048,24,0.001, 0.144, 10);
     CiA402Device m3 (3, &pm3, &sd3);
     //m3.Reset();

@@ -44,7 +44,7 @@ ulong CiA301CommPort::ReadSDO(const vector<uint8_t> &address)
 
     //Reading is got from an empty write response
     ulong ret=(ulong)WriteSDO(address, data);
-   // cout << "ReadSDO ret: " << ret << endl;
+    //cout << "ReadSDO ret: " << ret << endl;
      return ret;
 
 //    //Wait for the answer

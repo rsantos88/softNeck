@@ -63,19 +63,19 @@ int main (int argc, char *argv[])
 
     start = std::chrono::system_clock::now();
 
-    printf("GetPosition -> %f %f %f\n", m1.GetPosition(), m2.GetPosition(), m3.GetPosition());
+    //printf("GetPosition -> %f %f %f\n", m1.GetPosition(), m2.GetPosition(), m3.GetPosition());
 
 
-    printf("moving to pose: [%f] [%f]\n", pose[0], pose[1]);
+    printf("Moving to pose: [%f] [%f]\n", pose[0], pose[1]);
 
     pr2tendons(pose[0], pose[1], lengths);
 
-    posan[0] = (LG0-lengths[0])/radio;
-    posan[1] = (LG0-lengths[1])/radio;
-    posan[2] = (LG0-lengths[2])/radio;
+    posan[0] = (LG0 - lengths[0])/radio;
+    posan[1] = (LG0 - lengths[1])/radio;
+    posan[2] = (LG0 - lengths[2])/radio;
 
-    printf("tendons: [%f] [%f] [%f]\n", lengths[0], lengths[1], lengths[2]);
-    printf("target angular pos : [%f] [%f] [%f]\n", posan[0], posan[1], posan[2]);
+    //printf("tendons: [%f] [%f] [%f]\n", lengths[0], lengths[1], lengths[2]);
+    //printf("target angular pos : [%f] [%f] [%f]\n", posan[0], posan[1], posan[2]);
 
     m1.SetPosition(posan[0]);
     m2.SetPosition(posan[1]);

@@ -18,15 +18,19 @@ if not yarp.Network.isConnected("/pout", "/receiver"):
 if not yarp.Network.isConnected("/sender", "/pin"):
     print("Error connection witch /pin, /sender")
     exit()
+for i in range(1):
+    bout = yarp.Bottle()
+    bout = pout.prepare()
 
-bout = yarp.Bottle()
-bout = pout.prepare()
-bout.addString("sendme")
-pout.write()
-print("Sending [%s]"%bout.toString())
+    print(i)
+    bout.addString("sendme")
+    pout.write()
+    print("Sending [%s]"%bout.toString())
 
-bin = yarp.Bottle()
+    bin = yarp.Bottle()
 
-bin = pin.read()
+    bin = pin.read()
+    bout.clear()
 
-print(bin.toString())
+    print(bin.toString())
+    time.sleep(0.1)

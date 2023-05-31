@@ -92,8 +92,13 @@ int main ()
     FPDBlock fcPitchVelocity(2.5773, 3.2325, -0.8500, dts);
     FPDBlock fcRollVelocity(2.6299, 3.2395, -0.8600, dts);
 
-    imu.GetPitchRollYaw(pitch,roll,yaw);
-    printf("pitch: %f roll: %f\n", pitch, roll);
+    for(int i; i<100; i++)
+    {
+        imu.GetPitchRollYaw(pitch,roll,yaw);
+        //printf("pitch: %f roll: %f\n", pitch, roll);
+        //printf("Inicializando IMU: %d\n", i);
+    }
+    
 
     while((pitch>0.005 || pitch<-0.005) || (roll>0.005 || roll<-0.005)){
 

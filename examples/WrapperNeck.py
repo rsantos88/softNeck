@@ -11,89 +11,127 @@ import time
 
 class WrapperNeck(gym.Env):
     def __init__(self,render):
-        self.state = None
-        self.target = None # Target objetivo
-        self.lengths = None
-        self.lg0 = 0.003 # Pretension de los cables
-        self.radio = 0.0075
+        #self.state = None
+        self.target =  np.random.uniform(low = -0.5, high= 0.5, size=(2,)) # Target objetivo
+        self.reward = 0
 
         #? Create action space (Action -> pitch-roll // Observation -> pitch-roll)
-        self.action_space = spaces.Box(low=np.array([-40,-40]), high=np.array([40,40]),dtype=np.float32)
-        self.observation_space = spaces.Box(low=np.array([-np.inf]*2),high=np.array([np.inf]*2),shape=(2,), dtype=np.float32)
+        self.action_space = spaces.Box(low=np.array([5,5]), high=np.array([10,10]),shape =(2,),dtype=np.float32)
+        self.observation_space = spaces.Box(low=np.array([-0.5]*2),high=np.array([0.5]*2),shape=(2,), dtype=np.float32)
 
         self.render = render
         self.PathLocated = "/home/humasoft/Escritorio/Py-C/softNeck/build"
 
         #? Generation of all the paths to use ctypes ;)
-            #* Prueba de la IMU (funciona bien jejejej)
-        """ self.pathAdrian = ctypes.util.find_library(self.PathLocated + "/AdrianImu")
-        self.AdriImu = ctypes.CDLL(self.pathAdrian) """
 
             #* Start motors 
         self.StartMotors = self.PathLocated + "/startMotors"
+        self.StopMotors = self.PathLocated + "/stopMotors"
 
             #* Go Homeimport os
-
         self.GoHome = self.PathLocated + "/goHome"
 
             #* Set Position
         self.SetPosition = self.PathLocated + "/setPosition"
 
+        #? Create YARP communication
+        yarp.Network.init()
+        self.pin = yarp.BufferedPortBottle()
+        self.pout = yarp.BufferedPortBottle()
+
+        self.pin.open("/pin")
+        self.pout.open("/pout")
+
+        yarp.Network.connect("/pout", "/receiver")
+        yarp.Network.connect("/sender", "/pin" )
+
+        if not yarp.Network.isConnected("/pout", "/receiver"):
+            print("Error connection witch /pout /receiver")
+            exit()
+
+        if not yarp.Network.isConnected("/sender", "/pin"):
+            print("Error connection witch /pin, /sender")
+            exit()
+
+        self.bout = yarp.Bottle()
+        self.bout = self.pout.prepare()
+        self.bin = yarp.Bottle()
+        
+
+
     
     #? Define the reward
-    def reward(self,obs,target):
+    def rewardFunction(self,obs,target):
         # ver que función de reward le ponemos
-        reward = np.linalg(target - obs)
+        print(target)
+        print(obs)
+        reward = np.linalg.norm(target - obs)
         return reward
 
     #? Define the step
     def step(self,action):
-        Inpitch = action[0]
-        Inroll = action[1]
+        Inpitch = str(action[0])
+        Inroll = str(action[1])
+
+        print("ACTION :{}".format(action))
 
         # hacemos la llamada a la funció nque relaciona el motor 1 y 2 con el 3
-        motor1, motor2, motor3 = self.motorEstimation(Inpitch,Inroll)
+        """ motor1, motor2, motor3 = self.motorEstimation(Inpitch,Inroll) """
+
+        # Generamos la accion en el cuello
+        os.system(self.SetPosition +" "+ Inpitch+ " "+ Inroll)
+        time.sleep(2)
+        obs = np.fromstring(self.message("sendme"),dtype=float, sep= ' ')
+        #print(type(obs))
 
         # Enviamos los valores del motor al robot real
-        obs = self.libc.funcion(motor1,motor2,motor3) # Devolvemos la observacion
-        reward_state = self.reward(obs,self.target)
-        reward: self.reward = self.reward + reward_state
+        """ obs = self.libc.funcion(motor1,motor2,motor3) # Devolvemos la observacion """
+        
+        reward_state = self.rewardFunction(obs,self.target)
+        self.reward = self.reward + reward_state
+        print("Reward acumulado :{}".format(self.reward))
 
         if self.reward >= 5  or reward_state < 0.01: # errores en radianes
             done = True
         else:
             done = False
 
-        return obs,reward,done,{}
+        return obs,self.reward,done,{}
     
     #? Define the target for each iteration
-    def reset(self,initial = True):
+    def reset(self,initial = False):
+        print("HOLAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
         if initial:
             os.system(self.StartMotors)
+            #os.system(self.GoHome)
+            time.sleep(1)
+            os.system(self.SetPosition +" "+ "0"+ " "+ "0")
         else:
             os.system(self.SetPosition +" "+ "0"+ " "+ "0")
+            time.sleep(1)
 
-        os.system(self.GoHome)
-        time.sleep(1)
-        os.system(self.SetPosition +" "+ "0"+ " "+ "0")
-        self.reward = 0
-        target: self.target = (random.uniform(-45,45),random.uniform(-45,45)) # Estimamos el punto target al que queremos ir
-        """ self.AdriImu.main() """
-        return target
-    
-    #? Define function that estimate motor3
-
-    def motorEstimation(self,pitch,roll):
-        #Realizamos el proceso pertinente
-        self.lengths[0] = -0.001* (pitch/1.5);
-        self.lengths[1] =  0.001* (pitch/3 - roll/1.732);
-        self.lengths[2] =  0.001* (pitch/3 + roll/1.732);
         
-        # Trasnformation 
-        m1: self.motor[0] = (self.lg0-self.lengths[0])/self.radio;
-        m2: self.motor[1] = (self.lg0-self.lengths[1])/self.radio;
-        m3: self.motor[2] = (self.lg0-self.lengths[2])/self.radio;
-        return m1,m2,m3
+        self.reward = 0
+        self.target = np.random.uniform(low = -0.5, high= 0.5, size=(2,)) # Estimamos el punto target al que queremos ir   random.uniform(-45,45),random.uniform(-45,45)
+        print("Target :{}".format(self.target))
+        #print("Target type :{}".format(type(target)))
+        return self.target
+
+    
+    #? Define function that generates the message to YARP
+    def message(self,message):
+        self.bout = yarp.Bottle()
+        self.bout = self.pout.prepare()
+        self.bin.clear()
+        time.sleep(1)
+        self.bout.addString(message)
+        self.pout.write()
+        print("Sending [%s]"% self.bout.toString())
+        self.bin = self.pin.read()
+        print(self.bin.toString())
+        valor = self.bin.toString()
+        self.bout.clear()
+        return valor
 
 
 

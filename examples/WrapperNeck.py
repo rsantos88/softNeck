@@ -8,16 +8,18 @@ import random
 import yarp #! Include YARP for IMU constan comunication
 import os
 import time
+from colorama import Fore, Back, Style
+
 
 class WrapperNeck(gym.Env):
     def __init__(self,render):
         #self.state = None
         self.target =  np.random.uniform(low = -0.5, high= 0.5, size=(2,)) # Target objetivo
-        self.reward = 0
+        self.steps = 8
 
         #? Create action space (Action -> pitch-roll // Observation -> pitch-roll)
-        self.action_space = spaces.Box(low=np.array([5,5]), high=np.array([10,10]),shape =(2,),dtype=np.float32)
-        self.observation_space = spaces.Box(low=np.array([-0.5]*2),high=np.array([0.5]*2),shape=(2,), dtype=np.float32)
+        self.action_space = spaces.Box(low=np.array([-1,-1]), high=np.array([1,1]),dtype=np.float32)
+        self.observation_space = spaces.Box(low=np.array([-0.5,-0.5]),high=np.array([0.5,0.5]), dtype=np.float32)
 
         self.render = render
         self.PathLocated = "/home/humasoft/Escritorio/Py-C/softNeck/build"
@@ -57,6 +59,7 @@ class WrapperNeck(gym.Env):
         self.bout = self.pout.prepare()
         self.bin = yarp.Bottle()
         
+        
 
 
     
@@ -70,10 +73,17 @@ class WrapperNeck(gym.Env):
 
     #? Define the step
     def step(self,action):
-        Inpitch = str(action[0])
-        Inroll = str(action[1])
+        print(Fore.BLACK + Back.LIGHTYELLOW_EX)
+        done = False
+        reward=0
+        Inpitch = str(action[0] * 40)
+        Inroll = str(action[1] * 40)
 
-        print("ACTION :{}".format(action))
+        self.steps-=1
+        print("STEP: {}".format(self.steps))
+
+        print("Inpitch :{}".format(Inpitch))
+        print("Inroll :{}".format(Inroll))
 
         # hacemos la llamada a la funció nque relaciona el motor 1 y 2 con el 3
         """ motor1, motor2, motor3 = self.motorEstimation(Inpitch,Inroll) """
@@ -87,20 +97,29 @@ class WrapperNeck(gym.Env):
         # Enviamos los valores del motor al robot real
         """ obs = self.libc.funcion(motor1,motor2,motor3) # Devolvemos la observacion """
         
-        reward_state = self.rewardFunction(obs,self.target)
-        self.reward = self.reward + reward_state
-        print("Reward acumulado :{}".format(self.reward))
+        reward = self.rewardFunction(obs,self.target)
+        #self.reward = self.reward + reward_state
+        print(">>>> Reward:{}".format(reward))
 
-        if self.reward >= 5  or reward_state < 0.01: # errores en radianes
+        if reward < 0.1: # errores en radianes
             done = True
+            
         else:
             done = False
 
-        return obs,self.reward,done,{}
+        if self.steps <=0:
+            done= True
+            
+        else:
+            done = False
+        print(Style.RESET_ALL)
+        return obs,reward,done,{}
     
     #? Define the target for each iteration
     def reset(self,initial = False):
-        print("HOLAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+        
+        print("RESETTTTTTTTTTTTT")
+        time.sleep(2)
         if initial:
             os.system(self.StartMotors)
             #os.system(self.GoHome)
@@ -111,11 +130,12 @@ class WrapperNeck(gym.Env):
             time.sleep(1)
 
         
-        self.reward = 0
+        self.steps = 8
         self.target = np.random.uniform(low = -0.5, high= 0.5, size=(2,)) # Estimamos el punto target al que queremos ir   random.uniform(-45,45),random.uniform(-45,45)
         print("Target :{}".format(self.target))
         #print("Target type :{}".format(type(target)))
-        return self.target
+        observation = np.fromstring(self.message("sendme"),dtype=float, sep= ' ')
+        return observation
 
     
     #? Define function that generates the message to YARP

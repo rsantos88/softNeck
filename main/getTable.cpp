@@ -68,58 +68,66 @@ int main (int argc, char *argv[])
         imu.GetPitchRollYaw(pitch,roll,yaw);
     }
 
-    printf("IMU Calibrada\n");
+    printf("IMU Calibrada :) \n");
 
-    // tiempo
-    std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
+    // tiempo actual
+    time_t inicio = time(NULL);
+    time_t actual;
+
 
     int alpha = 0;
     int beta = 0;
 
-    while(alpha!=40)
+    printf("Inicio\n");
+
+    for(alpha=-40; alpha<=40; alpha+=4)
     {
-        // Leo IMU
-        imu.GetPitchRollYaw(pitch,roll,yaw);
-
-        // tiempo actual
-        std::chrono::steady_clock::time_point currentTime = std::chrono::steady_clock::now();
-
-        // Calcular la duración transcurrida
-        std::chrono::duration<double> elapsedTime = currentTime - startTime;
-
-        if(elapsedTime.count() >=2.0) // 2 sec
+        for(beta=-40; beta<=40; beta+=4)
         {
-            for(alpha=-40; alpha<=40; alpha++)
+
+            pose[0] = alpha;
+            pose[1] = beta;
+
+            pr2tendons(pose[0], pose[1], lengths);
+
+            posan[0] = (LG0 - lengths[0])/radio;
+            posan[1] = (LG0 - lengths[1])/radio;
+            posan[2] = (LG0 - lengths[2])/radio;
+
+            m1.SetPosition(posan[0]);
+            m2.SetPosition(posan[1]);
+            m3.SetPosition(posan[2]);
+
+            // para que le de tiempo a retornar a la posición beta= -40
+            if(beta==-40)
             {
-                for(beta=-40; beta<=40; beta++)
+                printf("retornando a la posición...\n");
+                while( time(NULL)-inicio < 2 ) // 2 sec
                 {
+                    imu.GetPitchRollYaw(pitch,roll,yaw);
+                }
 
-                    pose[0] = alpha;
-                    pose[1] = beta;
+                inicio  =  time(NULL);
+            }
+            else
+            {
+                while( time(NULL)-inicio < 1 ) // 1 sec
+                {
+                    // Leo IMU
+                    imu.GetPitchRollYaw(pitch,roll,yaw);
+                }
+            }
 
-                    pr2tendons(pose[0], pose[1], lengths);
+            imu.GetPitchRollYaw(pitch,roll,yaw);
 
-                    posan[0] = (LG0 - lengths[0])/radio;
-                    posan[1] = (LG0 - lengths[1])/radio;
-                    posan[2] = (LG0 - lengths[2])/radio;
+            printf("Pose: [%f] [%f] -> IMU: [%f] [%f] \n", pose[0], pose[1], pitch, roll);
+            csvFile << alpha << "," << beta << "," << pitch << "," << roll << endl;
 
-                    //printf("tendons: [%f] [%f] [%f]\n", lengths[0], lengths[1], lengths[2]);
-                    //printf("target angular pos : [%f] [%f] [%f]\n", posan[0], posan[1], posan[2]);
+            //reseteo startTime
+            inicio  =  time(NULL);
+         }
+     }
 
-                    m1.SetPosition(posan[0]);
-                    m2.SetPosition(posan[1]);
-                    m3.SetPosition(posan[2]);
-
-                    printf("Pose: [%f] [%f] -> IMU: [%f] [%f] \n", pose[0], pose[1], pitch, roll);
-                    csvFile << alpha << "," << beta << "," << pitch << "," << roll << endl;
-                 }
-             }
-
-         //reseteo startTime
-         startTime = std::chrono::steady_clock::now();
-        }
-
-    } // while (alpha!=40)
     printf("Finished :)\n");
     return 0;
 }

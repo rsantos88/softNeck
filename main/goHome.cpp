@@ -37,8 +37,6 @@ void pr2tendons(double pitch, double roll, std::vector<double> & vel)
 
 int main ()
 {
-    std::cout << "HELLOOOOOO1"<< std::endl;
-
     // inputs
     vector<double> targetPose{0, 0}; // HOME
     std::vector<double> targetVel(3);
@@ -47,9 +45,7 @@ int main ()
     double freq=50; //sensor use values: 50,100,500...
     double dts=1/freq;
     SamplingTime Ts;
-    std::cout << "HELLOOOOOO"<< std::endl;
     Ts.SetSamplingTime(dts); // 0.020
-    std::cout << "PETOOOOOOOO"<< std::endl;
 
     bool tensed = false;
 
@@ -97,8 +93,7 @@ int main ()
         imu.GetPitchRollYaw(pitch,roll,yaw);
         //printf("pitch: %f roll: %f\n", pitch, roll);
         //printf("Inicializando IMU: %d\n", i);
-    }
-    
+    } 
 
     while((pitch>0.005 || pitch<-0.005) || (roll>0.005 || roll<-0.005)){
 

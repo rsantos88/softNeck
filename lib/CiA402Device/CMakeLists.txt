@@ -1,5 +1,8 @@
 project(CiA402Device)
 
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 add_definitions(-DHICO_LE)
 
 # source files
